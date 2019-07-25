@@ -16,6 +16,8 @@ class Profiles(object):
         self.cc = dict_from_section(Config,'constants')
         self.pp = dict_from_section(Config,'params')
 
+        self.TCMBmuK = self.cc['TCMB'] * 1e6
+
         self.XH = 0.76 ### FIX THIS INTO CONSTANTS ###
         self.NNR = 100
         self.disc_fac = np.sqrt(2)
@@ -111,7 +113,7 @@ class Profiles(object):
         Pth2D_beam = thta* 0.0
         Pth2D2_beam = thta* 0.0
 
-        for kk in xrange(NNR2):
+        for kk in range(NNR2):
             rint  = np.sqrt((rad)**2  + thta_smooth[kk]**2 *AngDist**2)
             rint2 = np.sqrt((rad2)**2 + thta2_smooth[kk]**2*AngDist**2)
 
@@ -128,7 +130,7 @@ class Profiles(object):
                 Pth2D[kk]  = np.sum(2.*Pth_sim(rint /r200c_Mpc_over_h)*drint)
                 Pth2D2[kk] = np.sum(2.*Pth_sim(rint2/r200c_Mpc_over_h)*drint)
         
-        for kk in xrange(NNR):
+        for kk in range(NNR):
 
             special1 = special.iv(0, thta_smooth *thta[kk] / sigmaBeam**2)
             special2 = special.iv(0, thta2_smooth*thta2[kk]/ sigmaBeam**2)
@@ -154,7 +156,7 @@ class Profiles(object):
         sig  = 2.0*np.pi*dtht *np.sum(thta *rho2D_beam) 
         sig2 = 2.0*np.pi*dtht2*np.sum(thta2*rho2D2_beam) 
 
-        sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc['SIGMA_T'] * self.cc['TCMBmuK'] / self.cc['MP'] / (np.pi * np.radians(tht/60.)**2)  * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
+        sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc['SIGMA_T'] * self.TCMBmuK / self.cc['MP'] / (np.pi * np.radians(tht/60.)**2)  * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
         #sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc.c['SIGMA_T'] / self.cc.c['ME'] / (np.pi * np.radians(tht/60.)**2) * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
 
         sig_p  = 2.0*np.pi*dtht*np.sum(thta*Pth2D_beam)
@@ -172,8 +174,8 @@ class Profiles(object):
     def make_a_obs_profile_sim(self,thta_arc,r200c,z,rho_int,pres_int):
         rho = np.zeros(len(thta_arc))
         pth = np.zeros(len(thta_arc))
-        for ii in xrange(len(thta_arc)):
-            temp = self.project_prof_beam_sim_interpol(thta_arc[ii],r200c,z,rho_int,pres_int)
+        for ii in range(len(thta_arc)):
+            temp = self.project_prof_beam_interpol(thta_arc[ii],r200c,z,rho_int,pres_int)
             rho[ii] = temp[0]
             pth[ii] = temp[1]
         return rho,pth
@@ -207,7 +209,7 @@ class Profiles(object):
         ans *=  rhoc * Msol_cgs / kpc_cgs / kpc_cgs / kpc_cgs * fb 
         return ans
     
-    def Pth_sim_test(self,x):
+    def pth_sim_test(self,x):
         theta = np.array([18.1, 0.5, 4.35])
         ###Battaglia et al 2012b profile paramters w/o M & z dependences
         P0,xc,bt = theta

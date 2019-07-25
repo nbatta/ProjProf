@@ -116,9 +116,6 @@ class Profiles(object):
             rint2 = np.sqrt((rad2)**2 + thta2_smooth[kk]**2*AngDist**2)
 
             if (test):
-                theta_sim_rho = np.array([3.6337402156859753, 1.0369351928324118, 3.3290812595973063])
-                theta_sim_pth = np.array([18.1, 0.5, 4.35])
-        
                 rho2D[kk]  = np.sum(2.*self.rho_sim_test(theta_sim_rho,rint /r200c_Mpc_over_h)*drint)
                 rho2D2[kk] = np.sum(2.*self.rho_sim_test(theta_sim_rho,rint2/r200c_Mpc_over_h)*drint)
                 
@@ -195,3 +192,27 @@ class Profiles(object):
         else: 
             ans = interp1d(x,prof,kind='slinear',bounds_error=False,fill_value=0)
         return ans
+
+    #### JUST FOR TESTING ####
+    def rho_sim_test(self, x):
+        theta = np.array([3.6337402156859753, 1.0369351928324118, 3.3290812595973063])
+        ###Battaglia 2016 profile parameters w/o M & z dependences
+        fb = 0.0490086879038/0.314992203163
+        rhoc = 2.77525e2
+        Msol_cgs = 1.989e33
+        kpc_cgs = 3.086e21
+        a1,a2,a3 = theta
+        gamma = 0.2
+        ans = 10**a1 / ((x/0.5)**gamma * (1 + (x/0.5)**a2)**((a3 - gamma)/a2))
+        ans *=  rhoc * Msol_cgs / kpc_cgs / kpc_cgs / kpc_cgs * fb 
+        return ans
+    
+    def Pth_sim_test(self,x):
+        theta = np.array([18.1, 0.5, 4.35])
+        ###Battaglia et al 2012b profile paramters w/o M & z dependences
+        P0,xc,bt = theta
+        al = 1.0
+        gm = 0.3
+        ans = P0 / ((x*xc)**gm * (1 + (x*xc)**al)**((bt-gm)/al))
+        return ans
+    #### JUST FOR TESTING ####

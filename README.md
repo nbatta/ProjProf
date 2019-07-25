@@ -2,6 +2,12 @@
 
 Projection code for spherically symmetric density and pressure profiles to SZ observables
 
-Should be self-contained no externall libraries
+Should be self-contained no external libraries
 
-To start cp input/params_initial.ini input/params.ini
+To setup:
+cp input/params_initial.ini input/params.ini
+
+A quick test run:
+python bin/run_proj.py
+
+

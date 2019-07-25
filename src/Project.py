@@ -1,16 +1,21 @@
 import numpy as np
+from configparser import SafeConfigParser
+from scipy.integrate import quad
 from scipy import special
 from scipy.special import j0
 from scipy.interpolate import interp1d
 
-
-
-
-
+from src.io import dict_from_section
 
 class Profiles(object):
-    def __init__(self,constants,fwhm=1.4):
-        self.cc = constants
+    def __init__(self,iniFile="input/params.ini",fwhm=1.4):
+
+        Config = SafeConfigParser()
+        Config.optionxform=str
+        Config.read(iniFile)
+        self.cc = dict_from_section(Config,'constants')
+        self.pp = dict_from_section(Config,'params')
+
         self.XH = 0.76 ### FIX THIS INTO CONSTANTS ###
         self.NNR = 100
         self.disc_fac = np.sqrt(2)
@@ -21,12 +26,46 @@ class Profiles(object):
         self.inter_max = 5.
         self.inter_fine_fac = 40. #4.
 
+        self.h = self.pp['H0']/100.
+        self.om = (self.pp['ombh2']+self.pp['omch2'])/self.h**2
+
+    #Hubble function
+    def hub_func(self,z):
+        Om = self.om
+        Ol = 1 - Om
+        #ans = np.sqrt(Om*(1.0 + z)**3 + Ol + (1 - O_tot)*(1 + z)**2)
+        #FLAT LCDM
+        ans = np.sqrt(Om*(1.0 + z)**3 + Ol)
+        return ans
+
+    #Comoving Distance Integrand
+    def ComInt(self,z):
+        ans = 1.0/self.hub_func(z)
+        return ans
+
+    #Comoving Distance
+    def ComDist(self,z):
+        Om = self.om 
+        Ol = 1. - Om 
+        O_tot = Om + Ol
+
+        Dh = self.cc['C_OVER_HUBBLE']/self.h
+        ans = Dh*quad(self.ComInt,0,z)[0]
+        if (O_tot < 1.0): ans = Dh / np.sqrt(1.0-O_tot) *  np.sin(np.sqrt(1.0-O_tot) * quad(ComInt,0,z)[0])
+        if (O_tot > 1.0): ans = Dh / np.sqrt(O_tot-1.0) *  np.sinh(np.sqrt(O_tot-1.0) * quad(ComInt,0,z)[0]) 
+        return ans
+
+    #Angular Distance
+    def AngDist(self,z):
+        ans = self.ComDist(z)/(1.0+z)
+        return ans
+
     def project_prof_beam_interpol(self,tht,r200c,z,rho_sim,Pth_sim,test=False): #r200c in Mpc
 
         fwhm = self.fwhm
 
-        drint = 1e-3 * (self.cc.c['MPC2CM'])
-        AngDist = self.cc.results.angular_diameter_distance(z) * self.cc.H0/100.
+        drint = 1e-3 * (self.cc['MPC2CM'])
+        AngDist = self.AngDist(z) * self.h
         disc_fac = self.disc_fac
         l0 = self.l0 
         NNR = self.NNR 
@@ -36,7 +75,7 @@ class Profiles(object):
         sigmaBeam = fwhm / np.sqrt(8.*np.log(2.))
         
         # JCH: convert r200c to Mpc/h units to match Nick's AngDist above
-        r200c_Mpc_over_h = r200c * self.cc.H0/100.
+        r200c_Mpc_over_h = r200c * self.h
 
         sig = 0
         sig2 = 0
@@ -118,18 +157,18 @@ class Profiles(object):
         sig  = 2.0*np.pi*dtht *np.sum(thta *rho2D_beam) 
         sig2 = 2.0*np.pi*dtht2*np.sum(thta2*rho2D2_beam) 
 
-        sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc.c['SIGMA_T'] * self.cc.c['TCMBmuK'] / self.cc.c['MP'] / (np.pi * np.radians(tht/60.)**2)  * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
+        sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc['SIGMA_T'] * self.cc['TCMBmuK'] / self.cc['MP'] / (np.pi * np.radians(tht/60.)**2)  * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
         #sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc.c['SIGMA_T'] / self.cc.c['ME'] / (np.pi * np.radians(tht/60.)**2) * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
 
         sig_p  = 2.0*np.pi*dtht*np.sum(thta*Pth2D_beam)
         sig2_p = 2.0*np.pi*dtht2*np.sum(thta2*Pth2D2_beam)
 
         # JCH: get rid of TCMB here so that results are in Compton-y units
-        sig_all_p_beam = (2*sig_p - sig2_p) * self.cc.c['SIGMA_T']/(self.cc.c['ME']*self.cc.c['C']**2) / area_fac #* \
+        sig_all_p_beam = (2*sig_p - sig2_p) * self.cc['SIGMA_T']/(self.cc['ME']*self.cc['C']**2) / area_fac #* \
         #self.cc.c['TCMBmuK'] # muK #* ((2. + 2.*self.XH)/(3.+5.*self.XH))# muK
 
-        sig_all_beam /= (self.cc.H0/100.)
-        sig_all_p_beam /= (self.cc.H0/100.)
+        sig_all_beam /= (self.h)
+        sig_all_p_beam /= (self.h)
 
         return sig_all_beam, sig_all_p_beam #, sig_all_beam_cumul, sig_all_p_beam_cumul #JCH edit -- output cumulative profile as well
 

@@ -4,7 +4,10 @@ Projection code for spherically symmetric density and pressure profiles to SZ ob
 
 Should be self-contained no external libraries
 
-To setup:
+To install:
+python setup.py install --user
+
+Inital parameter file setup:
 cp input/params_initial.ini input/params.ini
 
 A quick test run:

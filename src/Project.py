@@ -156,7 +156,7 @@ class Profiles(object):
         sig  = 2.0*np.pi*dtht *np.sum(thta *rho2D_beam) 
         sig2 = 2.0*np.pi*dtht2*np.sum(thta2*rho2D2_beam) 
 
-        sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc['SIGMA_T'] * self.TCMBmuK / self.cc['MP'] / (np.pi * np.radians(tht/60.)**2)  * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
+        sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc['SIGMA_T'] * self.TCMBmuK / self.cc['MP'] / (np.pi * np.radians(tht/60.)**2) #* ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
         #sig_all_beam = (2*sig - sig2) * 1e-3 * self.cc.c['SIGMA_T'] / self.cc.c['ME'] / (np.pi * np.radians(tht/60.)**2) * ((2. + 2.*self.XH)/(3.+5.*self.XH)) 
 
         sig_p  = 2.0*np.pi*dtht*np.sum(thta*Pth2D_beam)
@@ -180,6 +180,7 @@ class Profiles(object):
             pth[ii] = temp[1]
         return rho,pth
 
+    ### Input for model profiles should be electron density and electron pressure NOT total density or thermal pressure  
     def interpol_sim_profile(self,x,prof):
         #Including extrapolation
         if (np.max(x) < self.inter_max):

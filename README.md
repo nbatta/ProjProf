@@ -1,6 +1,6 @@
 # ProjProf
 
-## Projection code for spherically symmetric density and pressure profiles to SZ observables
+## Projection code for spherically symmetric electron density and electron pressure profiles to SZ observables
 
 Should be self-contained no external libraries
 
